@@ -1,7 +1,11 @@
-const roteador = require('express').Router();
+const roteador = require('express').Router()
+const TabelaFornecedor = require('./TabelaFornecedor')
 
-roteador.use('/', (req, res) => {
-  res.send('ok')
-});
+roteador.use('/', async (requisicao, resposta) => {
+    const resultados = await TabelaFornecedor.listar()
+    resposta.send(
+        JSON.stringify(resultados)
+    )
+})
 
-module.exports = roteador;
+module.exports = roteador
