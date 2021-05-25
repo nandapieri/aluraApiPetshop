@@ -5,8 +5,27 @@ const config = require('config')
 const NaoEncontrado = require('./erros/NaoEncontrado')
 const CampoInvalido = require('./erros/CampoInvalido')
 const DadosNaoFornecidos = require('./erros/DadosNaoFornecidos')
+const ValorNaoSuportado = require('./erros/ValorNaoSuportado')
+const formatosAceitos = require('./Serializador').formatosAceitos
 
 app.use(bodyParser.json())
+
+app.use((requisicao, resposta, proximo) => {
+  let formatoRequisitado = requisicao.header('Accept')
+  //se o formato não for especificado, responde em json
+  if(formatoRequisitado === '*/*') {
+    formatoRequisitado = 'application/json'
+  }
+
+  if (formatosAceitos.indexOf(formatoRequisitado) === -1 ) {
+    resposta.status(406)
+    resposta.end()
+    return
+  }
+
+  resposta.setHeader('Content-type', formatoRequisitado)
+  proximo()
+})
 
 const roteador = require('./rotas/fornecedores')
 app.use('/api/fornecedores', roteador)
@@ -19,6 +38,10 @@ app.use((erro, requisicao, resposta, proximo) => {
 
   if (erro instanceof CampoInvalido || erro instanceof DadosNaoFornecidos) {
     status = 400
+  }
+
+  if (erro instanceof ValorNaoSuportado) {
+    status = 406
   }
 
   resposta.status(status)
